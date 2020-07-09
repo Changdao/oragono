@@ -55,10 +55,16 @@ type MySQL struct {
 	insertConversation   *sql.Stmt
 	insertAccountMessage *sql.Stmt
 
+	//queryAuth *sql.Stmt
+
 	stateMutex sync.Mutex
 	config     Config
 
 	wakeForgetter chan e
+}
+
+func (mysql *MySQL) IsAuth() bool {
+	return mysql.config.Auth
 }
 
 func (mysql *MySQL) Initialize(logger *logger.Manager, config Config) {
@@ -460,6 +466,12 @@ func (mysql *MySQL) prepareStatements() (err error) {
 	if err != nil {
 		return
 	}
+
+	// mysql.queryAuth, err = mysql.db.Prepare(`SELECT * FROM member where name=?;`)
+	// if err != nil {
+	// 	return
+	// }
+
 	mysql.insertSequence, err = mysql.db.Prepare(`INSERT INTO sequence
 		(target, nanotime, history_id) VALUES (?, ?, ?);`)
 	if err != nil {
@@ -886,4 +898,67 @@ func (mysql *MySQL) MakeSequence(target, correspondent string, cutoff time.Time)
 		mysql:         mysql,
 		cutoff:        cutoff,
 	}
+}
+
+type MemberRow struct {
+	Name            string
+	RegisteredAt    string
+	Credentials     string
+	Callback        string
+	Verified        bool
+	AdditionalNicks string
+	VHost           string
+	Settings        string
+}
+
+// type MemberRow struct {
+// 	// Name of the account.
+// 	Name            string
+// 	NameCasefolded  string
+// 	RegisteredAt    string
+// 	Credentials     AccountCredentials
+// 	Verified        bool
+// 	AdditionalNicks []string
+// 	VHost           VHostInfo
+// 	Settings        AccountSettings
+// }
+
+func (mysql *MySQL) CheckPassphrase(accountName, passphrase string) (memberRow MemberRow, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), mysql.getTimeout())
+	defer cancel()
+	rows, rowsErr := mysql.db.QueryContext(ctx, `SELECT name FROM member where name=? and password=password(?)`, accountName, passphrase)
+	if rowsErr != nil {
+		err = rowsErr
+		return
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var name string
+		rows.Scan(&name)
+		memberRow.Name = name
+		mysql.logger.Info("mysql auth: name:", fmt.Sprintf("%s", name))
+		return
+	}
+	err = errors.New("Account does not exist")
+	return
+}
+
+func (mysql *MySQL) HasFrield(target string, sender string) (hasFriend bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), mysql.getTimeout())
+	defer cancel()
+	rows, rowsErr := mysql.db.QueryContext(ctx, `SELECT count(*) FROM friend where name=? and friend=?`, target, sender)
+	mysql.logger.Info("[INFO]check friend:", fmt.Sprintf("%s HAS %s", target, sender))
+	if rowsErr != nil {
+		hasFriend = false
+		return
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		hasFriend = true
+		return
+	}
+	hasFriend = false
+	return
 }

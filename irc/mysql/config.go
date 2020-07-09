@@ -16,6 +16,7 @@ type Config struct {
 	User            string
 	Password        string
 	HistoryDatabase string `yaml:"history-database"`
+	Auth            bool
 	Timeout         time.Duration
 
 	// XXX these are copied from elsewhere in the config:

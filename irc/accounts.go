@@ -19,6 +19,7 @@ import (
 	"github.com/oragono/oragono/irc/email"
 	"github.com/oragono/oragono/irc/ldap"
 	"github.com/oragono/oragono/irc/modes"
+	"github.com/oragono/oragono/irc/mysql"
 	"github.com/oragono/oragono/irc/passwd"
 	"github.com/oragono/oragono/irc/utils"
 	"github.com/tidwall/buntdb"
@@ -1072,6 +1073,22 @@ func (am *AccountManager) AuthenticateByPassphrase(client *Client, accountName s
 			account, err = am.loadWithAutocreation(accountName, ldapConf.Autocreate)
 			return
 		}
+	}
+
+	if am.server.historyDB.IsAuth() {
+		am.server.logger.Info("debug", "history DB is auth.....")
+		var member mysql.MemberRow
+		member, err = am.server.historyDB.CheckPassphrase(accountName, passphrase)
+		if err != nil {
+			am.server.logger.Error("internal", "failed mysql auth invocation", err.Error())
+			return
+		}
+		account.Name = member.Name
+		account.NameCasefolded, err = CasefoldName(member.Name)
+		regTimeInt, _ := strconv.ParseInt(member.RegisteredAt, 10, 64)
+		account.RegisteredAt = time.Unix(0, regTimeInt).UTC()
+		account.Verified = true
+		return
 	}
 
 	if config.Accounts.AuthScript.Enabled {

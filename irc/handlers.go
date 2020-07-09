@@ -2028,6 +2028,17 @@ func dispatchMessageToTarget(client *Client, tags map[string]string, histType hi
 			}
 			return
 		}
+
+		//only sender/client is friend of target/user can send message.
+		//add liujd
+
+		var hasFriend bool
+		hasFriend = server.historyDB.HasFrield(target, client.Nick())
+		if !hasFriend {
+			rb.Add(nil, server.name, ERR_NOSUCHNICK, client.Nick(), target, "You are not his friend")
+			return
+		}
+
 		tDetails := user.Details()
 		tnick := tDetails.nick
 
