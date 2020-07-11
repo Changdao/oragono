@@ -2033,7 +2033,7 @@ func dispatchMessageToTarget(client *Client, tags map[string]string, histType hi
 		//add liujd
 
 		var hasFriend bool
-		hasFriend = server.historyDB.HasFrield(target, client.Nick())
+		hasFriend = server.historyDB.HasFriend(target, client.Nick())
 		if !hasFriend {
 			rb.Add(nil, server.name, ERR_NOSUCHNICK, client.Nick(), target, "You are not his friend")
 			return

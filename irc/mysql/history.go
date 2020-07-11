@@ -944,7 +944,7 @@ func (mysql *MySQL) CheckPassphrase(accountName, passphrase string) (memberRow M
 	return
 }
 
-func (mysql *MySQL) HasFrield(target string, sender string) (hasFriend bool) {
+func (mysql *MySQL) HasFriend(target string, sender string) (hasFriend bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), mysql.getTimeout())
 	defer cancel()
 	rows, rowsErr := mysql.db.QueryContext(ctx, `SELECT count(*) FROM friend where name=? and friend=?`, target, sender)
