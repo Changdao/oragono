@@ -21,3 +21,14 @@ CREATE TABLE `friend` (
     `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
     PRIMARY KEY (`id`)
 );
+
+
+CREATE TABLE `add_request` (
+    `id` int(11) not null auto_increment,
+    `owner` varchar(64) not null,
+    `requester` varchar(64) not null,
+    `message` varchar(64),
+    `status` varchar(64) not null,
+    `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    PRIMARY KEY (`id`)
+);
