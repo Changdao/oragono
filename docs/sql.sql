@@ -32,3 +32,14 @@ CREATE TABLE `add_request` (
     `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
     PRIMARY KEY (`id`)
 );
+
+
+CREATE TABLE `offline_message` (
+    `id` int(11) not null auto_increment,
+    `receiver` varchar(64) not null,
+    `sender` varchar(64) not null,
+    `message` varchar(64),
+    `status` varchar(64) ,
+    `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    PRIMARY KEY (`id`)
+);

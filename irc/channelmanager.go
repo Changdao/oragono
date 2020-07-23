@@ -4,6 +4,7 @@
 package irc
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -99,6 +100,9 @@ func (cm *ChannelManager) Join(client *Client, name string, key string, isSajoin
 		entry := cm.chans[casefoldedName]
 		if entry == nil {
 			registered := cm.registeredChannels.Has(casefoldedName)
+
+			server.logger.Debug(fmt.Sprintf("channel should registered:%t", registered))
+
 			// enforce OpOnlyCreation
 			if !registered && server.Config().Channels.OpOnlyCreation && !client.HasRoleCapabs("chanreg") {
 				return nil, errInsufficientPrivs

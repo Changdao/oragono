@@ -2023,7 +2023,12 @@ func dispatchMessageToTarget(client *Client, tags map[string]string, histType hi
 
 		user := server.clients.Get(target)
 		if user == nil {
-			if histType != history.Notice {
+
+			var delivered = server.historyDB.OfflineDispatch(target, client.Nick(), message.Message)
+
+			server.logger.Info("message", fmt.Sprintf("offline message to [%s] from [u:%s] diliver result: [%t]", target, client.Nick(), delivered))
+
+			if !delivered && histType != history.Notice {
 				rb.Add(nil, server.name, ERR_NOSUCHNICK, client.Nick(), target, "No such nick")
 			}
 			return

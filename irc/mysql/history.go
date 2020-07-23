@@ -55,6 +55,9 @@ type MySQL struct {
 	insertConversation   *sql.Stmt
 	insertAccountMessage *sql.Stmt
 
+	//offline messages
+	insertOfflinePrivMessage *sql.Stmt
+
 	//queryAuth *sql.Stmt
 
 	stateMutex sync.Mutex
@@ -487,6 +490,8 @@ func (mysql *MySQL) prepareStatements() (err error) {
 	if err != nil {
 		return
 	}
+
+	mysql.insertOfflinePrivMessage, err = mysql.db.Prepare(`INSERT INTO offline_message(receiver,sender,message) values(?,?,?)`)
 
 	return
 }
@@ -960,5 +965,31 @@ func (mysql *MySQL) HasFriend(target string, sender string) (hasFriend bool) {
 		return
 	}
 	hasFriend = false
+	return
+}
+
+func (mysql *MySQL) OfflineDispatch(target string, sender string, message string) (delivered bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), mysql.getTimeout())
+	defer cancel()
+	rows, rowsErr := mysql.db.QueryContext(ctx, `SELECT name FROM member where name=?`, target)
+	if rowsErr != nil {
+		delivered = false
+		mysql.logger.Debug("mysql", fmt.Sprintf("select member %s error: %s", target, rowsErr))
+		return
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var err error
+		_, err = mysql.insertOfflinePrivMessage.ExecContext(ctx, target, sender, message)
+		if err == nil {
+			delivered = true
+			return
+		}
+
+		mysql.logger.Debug("mysql", fmt.Sprintf("insert offline message error: %s", err))
+
+	}
+	delivered = false
 	return
 }
