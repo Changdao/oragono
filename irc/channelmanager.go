@@ -101,7 +101,7 @@ func (cm *ChannelManager) Join(client *Client, name string, key string, isSajoin
 		if entry == nil {
 			registered := cm.registeredChannels.Has(casefoldedName)
 
-			server.logger.Debug(fmt.Sprintf("channel should registered:%t", registered))
+			server.logger.Debug(fmt.Sprintf("channel should registered:%t\n", registered))
 
 			// enforce OpOnlyCreation
 			if !registered && server.Config().Channels.OpOnlyCreation && !client.HasRoleCapabs("chanreg") {
